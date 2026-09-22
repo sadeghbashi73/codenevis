@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>codenevis — control panel</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="dot" id="pulse"></span>
+    <strong>codenevis</strong>
+    <span class="repo" id="repo">…</span>
+  </div>
+  <nav class="tabs">
+    <button class="tab active" data-view="board">Board</button>
+    <button class="tab" data-view="activity">Activity</button>
+    <button class="tab" data-view="runs">Runs</button>
+    <button class="tab" data-view="settings">Settings</button>
+  </nav>
+  <div class="actions">
+    <span class="pipeline-state" id="pipelineState"></span>
+    <button class="btn primary" id="newBrief">New project</button>
+    <button class="btn" id="runPipeline">Continue backlog</button>
+    <button class="btn icon" id="refresh" title="Refresh">↻</button>
+  </div>
+</header>
+
+<main>
+  <!-- ------------------------------------------------ board -->
+  <section class="view active" id="view-board">
+    <div class="stats" id="stats"></div>
+    <div class="split">
+      <div class="panel">
+        <h2>Backlog</h2>
+        <div id="taskList" class="list"></div>
+      </div>
+      <div class="panel">
+        <h2>Briefs</h2>
+        <div id="briefList" class="list compact"></div>
+        <h2 class="mt">Pull requests</h2>
+        <div id="prList" class="list compact"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- --------------------------------------------- activity -->
+  <section class="view" id="view-activity">
+    <div class="panel wide">
+      <h2>Who said what</h2>
+      <p class="hint">Every comment across the repository, newest first. Each one is tagged with the agent that wrote it.</p>
+      <div id="activityList" class="feed"></div>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------- runs -->
+  <section class="view" id="view-runs">
+    <div class="panel wide">
+      <h2>Workflow runs</h2>
+      <div id="runList" class="list"></div>
+    </div>
+  </section>
+
+  <!-- --------------------------------------------- settings -->
+  <section class="view" id="view-settings">
+    <div class="panel wide">
+      <h2>API keys</h2>
+      <p class="hint">
+        One key per role, so the three agents can use different providers, models and rate limits.
+        Keys are encrypted by the GitHub CLI before they leave this machine and written straight into
+        repository secrets — this panel can show you whether a key is set, never what it is.
+      </p>
+      <div id="secretList" class="secrets"></div>
+    </div>
+
+    <div class="panel wide">
+      <h2>Models</h2>
+      <p class="hint">Edits are written to <code>config/agents.json</code>. Commit and push for them to reach Actions.</p>
+      <div id="modelList" class="models"></div>
+      <div class="row end">
+        <span class="hint" id="modelSaved"></span>
+        <button class="btn primary" id="saveModels">Save</button>
+      </div>
+    </div>
+
+    <div class="panel wide">
+      <h2>Policy</h2>
+      <div id="policyList" class="models"></div>
+    </div>
+
+    <div class="panel wide">
+      <h2>Connection</h2>
+      <div class="field">
+        <label for="repoInput">Repository</label>
+        <input id="repoInput" placeholder="owner/name" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="tokenInput">GitHub token</label>
+        <input id="tokenInput" type="password" placeholder="leave empty to keep using gh auth token" autocomplete="off">
+      </div>
+      <div class="row end">
+        <span class="hint" id="connSaved"></span>
+        <button class="btn" id="saveConn">Save connection</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- detail drawer -->
+<aside id="drawer" class="drawer">
+  <div class="drawer-head">
+    <div>
+      <span class="chip" id="drawerKind"></span>
+      <h3 id="drawerTitle"></h3>
+    </div>
+    <div class="row">
+      <a class="btn small" id="drawerLink" target="_blank" rel="noopener">Open on GitHub</a>
+      <button class="btn icon" id="drawerClose">✕</button>
+    </div>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+</aside>
+<div id="scrim" class="scrim"></div>
+
+<!-- new brief dialog -->
+<dialog id="briefDialog">
+  <form method="dialog" id="briefForm">
+    <h3>New project</h3>
+    <p class="hint">
+      Describe what you want in plain language. The PO agent turns it into a PRD and a backlog,
+      then the developer and QC agents build it, task by task.
+    </p>
+    <div class="field">
+      <label for="briefTitle">Title</label>
+      <input id="briefTitle" required placeholder="A CLI time tracker">
+    </div>
+    <div class="field">
+      <label for="briefBody">What do you want built?</label>
+      <textarea id="briefBody" rows="10" required placeholder="Start and stop a timer for a named project.
+Show total time per project for the current week.
+Data survives a restart.
+
+Constraints: Python, no external services."></textarea>
+    </div>
+    <label class="check">
+      <input type="checkbox" id="briefStart" checked>
+      Start the pipeline immediately
+    </label>
+    <div class="row end mt">
+      <button class="btn" value="cancel">Cancel</button>
+      <button class="btn primary" id="briefSubmit" value="create">Create</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toast" class="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

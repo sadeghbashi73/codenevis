@@ -81,6 +81,18 @@ Check your wiring at any time:
 node agents/doctor.mjs
 ```
 
+## The control panel
+
+A local dashboard for the whole pipeline — no deployment, no account, loopback only.
+
+```bash
+node client/server.mjs
+```
+
+Open <http://127.0.0.1:4317> and you get the backlog in execution order, every comment each agent has made, the workflow runs, and a settings page where you paste the API keys. Keys are encrypted by the GitHub CLI before they leave the machine and written straight into repository secrets — the panel can tell you whether a key is set, never what it is.
+
+**New project** creates the brief issue and starts the pipeline. **Continue backlog** picks up the next unfinished task. See `docs/CONTROL-PANEL.md`.
+
 ## Driving it by hand
 
 The pipeline runs end to end on its own, but every stage is also a workflow you can dispatch from the Actions tab:
@@ -119,12 +131,18 @@ agents/
     github.mjs      GitHub REST client
     pipeline.mjs    labels, task format, git plumbing
     config.mjs      per-agent config resolution
+client/
+  server.mjs        the control panel's local server
+  public/           its single-page UI
 config/agents.json  models, providers, budgets, policy
-.github/workflows/  the four workflows
+scripts/
+  selftest.mjs      tests for the pipeline itself
+  setup-secrets.sh  interactive key setup
+.github/workflows/  the five workflows
 ```
 
 ## Cost
 
 Each task costs one developer run plus one QC run, and a re-review for every round QC sends it back. A ten-task project is roughly twenty to thirty model runs. Point the QC role at a cheaper model in `config/agents.json`, lower `maxSteps`, or lower `maxTasksPerRun` to keep a run bounded.
 
-`docs/SETUP.md` walks through the first run in detail. `docs/DESIGN.md` explains why the pipeline is shaped the way it is.
+`docs/SETUP.md` walks through the first run in detail, `docs/CONTROL-PANEL.md` covers the dashboard, and `docs/DESIGN.md` explains why the pipeline is shaped the way it is.

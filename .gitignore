@@ -3,3 +3,6 @@ node_modules/
 .env.*
 *.log
 .DS_Store
+
+# control panel local state — token and repository override
+.codenevis/
