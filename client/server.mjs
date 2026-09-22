@@ -451,6 +451,27 @@ const routes = {
     return { number: issue.number, url: issue.html_url };
   },
 
+  'POST /api/labels': async (body) => {
+    const { number, add = [], remove = [] } = body;
+    if (!Number.isInteger(number)) throw new Error('an issue number is required');
+    for (const label of remove) {
+      await gh('DELETE', `/issues/${number}/labels/${encodeURIComponent(label)}`).catch(() => {});
+    }
+    if (add.length) await gh('POST', `/issues/${number}/labels`, { labels: add });
+    return { ok: true };
+  },
+
+  'GET /api/file': async (_body, query) => {
+    const filePath = query.get('path');
+    if (!filePath || filePath.includes('..')) throw new Error('a repository-relative path is required');
+    const file = await gh('GET', `/contents/${filePath.split('/').map(encodeURIComponent).join('/')}`);
+    return {
+      path: filePath,
+      url: file.html_url,
+      content: Buffer.from(file.content ?? '', 'base64').toString('utf8'),
+    };
+  },
+
   'POST /api/settings': async (body) => {
     if (body.repo) REPO = body.repo.trim();
     if (body.token) TOKEN = body.token.trim();

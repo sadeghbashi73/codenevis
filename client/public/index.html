@@ -1,163 +1,81 @@
 <!doctype html>
-<html lang="en">
+<html lang="fa" dir="rtl">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>codenevis — control panel</title>
+<title>codenevis</title>
 <link rel="stylesheet" href="style.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
 </head>
 <body>
 
-<header class="topbar">
-  <div class="brand">
-    <span class="dot" id="pulse"></span>
-    <strong>codenevis</strong>
-    <span class="repo" id="repo">…</span>
+<div class="app">
+
+  <aside class="sidebar">
+    <a class="brand" href="#/">
+      <span class="brand-mark">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 3h6v3h3v5a6 6 0 0 1-12 0V6h3V3Z"/><path d="M9 11h.01M15 11h.01M6 21h12"/>
+        </svg>
+      </span>
+      <span class="brand-text">
+        <b>codenevis</b>
+        <small id="brandRepo"></small>
+      </span>
+    </a>
+
+    <nav id="nav"></nav>
+
+    <footer class="sidebar-foot">
+      <span class="pulse" id="pulse"></span>
+      <button class="lang-toggle" id="langToggle">EN</button>
+    </footer>
+  </aside>
+
+  <div class="content">
+    <header class="topbar">
+      <button class="btn icon only-narrow" id="menuBtn" aria-label="menu">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <div class="topbar-spacer"></div>
+      <button class="btn icon" id="refreshBtn" aria-label="refresh">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5"/></svg>
+      </button>
+      <button class="btn" id="continueBtn"></button>
+      <button class="btn primary" id="newProjectBtn"></button>
+    </header>
+
+    <main id="main"></main>
   </div>
-  <nav class="tabs">
-    <button class="tab active" data-view="board">Board</button>
-    <button class="tab" data-view="activity">Activity</button>
-    <button class="tab" data-view="runs">Runs</button>
-    <button class="tab" data-view="settings">Settings</button>
-  </nav>
-  <div class="actions">
-    <span class="pipeline-state" id="pipelineState"></span>
-    <button class="btn primary" id="newBrief">New project</button>
-    <button class="btn" id="runPipeline">Continue backlog</button>
-    <button class="btn icon" id="refresh" title="Refresh">↻</button>
-  </div>
-</header>
 
-<main>
-  <!-- ------------------------------------------------ board -->
-  <section class="view active" id="view-board">
-    <div class="stats" id="stats"></div>
-    <div class="split">
-      <div class="panel">
-        <h2>Backlog</h2>
-        <div id="taskList" class="list"></div>
-      </div>
-      <div class="panel">
-        <h2>Briefs</h2>
-        <div id="briefList" class="list compact"></div>
-        <h2 class="mt">Pull requests</h2>
-        <div id="prList" class="list compact"></div>
-      </div>
-    </div>
-  </section>
+  <div class="nav-scrim" id="scrim"></div>
+</div>
 
-  <!-- --------------------------------------------- activity -->
-  <section class="view" id="view-activity">
-    <div class="panel wide">
-      <h2>Who said what</h2>
-      <p class="hint">Every comment across the repository, newest first. Each one is tagged with the agent that wrote it.</p>
-      <div id="activityList" class="feed"></div>
-    </div>
-  </section>
-
-  <!-- ------------------------------------------------- runs -->
-  <section class="view" id="view-runs">
-    <div class="panel wide">
-      <h2>Workflow runs</h2>
-      <div id="runList" class="list"></div>
-    </div>
-  </section>
-
-  <!-- --------------------------------------------- settings -->
-  <section class="view" id="view-settings">
-    <div class="panel wide">
-      <h2>API keys</h2>
-      <p class="hint">
-        One key per role, so the three agents can use different providers, models and rate limits.
-        Keys are encrypted by the GitHub CLI before they leave this machine and written straight into
-        repository secrets — this panel can show you whether a key is set, never what it is.
-      </p>
-      <div id="secretList" class="secrets"></div>
-    </div>
-
-    <div class="panel wide">
-      <h2>Models</h2>
-      <p class="hint">Edits are written to <code>config/agents.json</code>. Commit and push for them to reach Actions.</p>
-      <div id="modelList" class="models"></div>
-      <div class="row end">
-        <span class="hint" id="modelSaved"></span>
-        <button class="btn primary" id="saveModels">Save</button>
-      </div>
-    </div>
-
-    <div class="panel wide">
-      <h2>Policy</h2>
-      <div id="policyList" class="models"></div>
-    </div>
-
-    <div class="panel wide">
-      <h2>Connection</h2>
-      <div class="field">
-        <label for="repoInput">Repository</label>
-        <input id="repoInput" placeholder="owner/name" autocomplete="off">
-      </div>
-      <div class="field">
-        <label for="tokenInput">GitHub token</label>
-        <input id="tokenInput" type="password" placeholder="leave empty to keep using gh auth token" autocomplete="off">
-      </div>
-      <div class="row end">
-        <span class="hint" id="connSaved"></span>
-        <button class="btn" id="saveConn">Save connection</button>
-      </div>
-    </div>
-  </section>
-</main>
-
-<!-- detail drawer -->
-<aside id="drawer" class="drawer">
-  <div class="drawer-head">
-    <div>
-      <span class="chip" id="drawerKind"></span>
-      <h3 id="drawerTitle"></h3>
-    </div>
-    <div class="row">
-      <a class="btn small" id="drawerLink" target="_blank" rel="noopener">Open on GitHub</a>
-      <button class="btn icon" id="drawerClose">✕</button>
-    </div>
-  </div>
-  <div class="drawer-body" id="drawerBody"></div>
-</aside>
-<div id="scrim" class="scrim"></div>
-
-<!-- new brief dialog -->
 <dialog id="briefDialog">
   <form method="dialog" id="briefForm">
-    <h3>New project</h3>
-    <p class="hint">
-      Describe what you want in plain language. The PO agent turns it into a PRD and a backlog,
-      then the developer and QC agents build it, task by task.
-    </p>
+    <h3 id="dlgTitle"></h3>
+    <p class="hint" id="dlgHint"></p>
     <div class="field">
-      <label for="briefTitle">Title</label>
-      <input id="briefTitle" required placeholder="A CLI time tracker">
+      <label for="briefTitle" id="lblTitle"></label>
+      <input id="briefTitle" required>
     </div>
     <div class="field">
-      <label for="briefBody">What do you want built?</label>
-      <textarea id="briefBody" rows="10" required placeholder="Start and stop a timer for a named project.
-Show total time per project for the current week.
-Data survives a restart.
-
-Constraints: Python, no external services."></textarea>
+      <label for="briefBody" id="lblBody"></label>
+      <textarea id="briefBody" rows="9" required></textarea>
     </div>
     <label class="check">
       <input type="checkbox" id="briefStart" checked>
-      Start the pipeline immediately
+      <span id="lblStart"></span>
     </label>
-    <div class="row end mt">
-      <button class="btn" value="cancel">Cancel</button>
-      <button class="btn primary" id="briefSubmit" value="create">Create</button>
+    <div class="right mt">
+      <button class="btn" value="cancel" id="dlgCancel"></button>
+      <button class="btn primary" value="create" id="dlgCreate"></button>
     </div>
   </form>
 </dialog>
 
 <div id="toast" class="toast"></div>
 
-<script src="app.js"></script>
+<script type="module" src="app.js"></script>
 </body>
 </html>

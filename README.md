@@ -89,9 +89,21 @@ A local dashboard for the whole pipeline — no deployment, no account, loopback
 node client/server.mjs
 ```
 
-Open <http://127.0.0.1:4317> and you get the backlog in execution order, every comment each agent has made, the workflow runs, and a settings page where you paste the API keys. Keys are encrypted by the GitHub CLI before they leave the machine and written straight into repository secrets — the panel can tell you whether a key is set, never what it is.
+Open <http://127.0.0.1:4317>. Nine pages, in Persian or English with the direction to match:
 
-**New project** creates the brief issue and starts the pipeline. **Continue backlog** picks up the next unfinished task. See `docs/CONTROL-PANEL.md`.
+| Page | What it is for |
+| --- | --- |
+| **Overview** | Is the pipeline running, how much is merged, and what each agent is on right now |
+| **Projects** | A card per brief; open one for its PRD and its tasks |
+| **Board** | A column per status — waiting, building, in review, changes asked, done, needs you |
+| **Tasks** | The backlog in order, filterable and searchable |
+| **Task detail** | Acceptance criteria as a checklist, the pull request and its files, the full developer ↔ QC conversation, and buttons to re-run, re-review or unblock |
+| **Activity** | Every comment in the repository, tagged with the agent that wrote it |
+| **Runs** | Workflow runs and their status |
+| **Agents** | Model, provider, step budget and API key per role |
+| **Settings** | Connection, policy, language, docs |
+
+API keys are set from the Agents page: the GitHub CLI encrypts each one with the repository public key before it leaves your machine, so the panel never writes a key to disk and can only report whether one is set. See `docs/CONTROL-PANEL.md`.
 
 ## Driving it by hand
 
@@ -133,7 +145,7 @@ agents/
     config.mjs      per-agent config resolution
 client/
   server.mjs        the control panel's local server
-  public/           its single-page UI
+  public/           its UI — router, pages, design system, Persian and English
 config/agents.json  models, providers, budgets, policy
 scripts/
   selftest.mjs      tests for the pipeline itself
