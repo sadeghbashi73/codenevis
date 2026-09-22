@@ -1,0 +1,50 @@
+name: Project brief
+description: Describe what you want built. The PO agent turns it into a PRD and a backlog, then the team builds it.
+title: '[Brief] '
+labels: ['agent:po']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Labelling this issue `agent:po` starts the pipeline automatically.
+        The PO agent plans it, the developer agent implements each task, and
+        the QC agent reviews and merges. You do not need to do anything else.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What do you want built?
+      description: Plain language is fine. Say what it does and who uses it, not how to build it.
+      placeholder: A command-line tool that tracks how long I spend on each project and shows a weekly summary.
+    validations:
+      required: true
+
+  - type: textarea
+    id: must_have
+    attributes:
+      label: Must have
+      description: The things that make it useful. One per line.
+      placeholder: |
+        Start and stop a timer for a named project
+        See total time per project for the current week
+        Data survives a restart
+    validations:
+      required: false
+
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints
+      description: Language, framework, storage, anything the team must or must not use. Leave empty to let the PO agent decide.
+      placeholder: Python, no external services, must run offline.
+    validations:
+      required: false
+
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Out of scope
+      description: Anything you explicitly do not want in this version.
+      placeholder: No web interface, no multi-user support.
+    validations:
+      required: false

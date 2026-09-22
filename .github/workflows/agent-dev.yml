@@ -1,0 +1,46 @@
+name: Developer agent
+
+# Implement one task on its own. The pipeline normally does this for you;
+# run it by hand to retry a single task or to work on one out of order.
+
+on:
+  workflow_dispatch:
+    inputs:
+      task_issue:
+        description: 'Task issue number to implement'
+        required: true
+        type: string
+
+concurrency:
+  group: codenevis-pipeline
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  implement:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - run: node agents/dev.mjs
+        env:
+          DEV_API_KEY: ${{ secrets.DEV_API_KEY }}
+          CODENEVIS_API_KEY: ${{ secrets.CODENEVIS_API_KEY }}
+          DEV_MODEL: ${{ vars.DEV_MODEL }}
+          DEV_PROVIDER: ${{ vars.DEV_PROVIDER }}
+          DEV_BASE_URL: ${{ vars.DEV_BASE_URL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_PAT: ${{ secrets.GH_PAT }}
+          TASK_ISSUE: ${{ inputs.task_issue }}

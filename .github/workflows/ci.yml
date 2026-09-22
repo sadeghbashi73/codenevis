@@ -1,0 +1,37 @@
+name: CI
+
+# Guards the pipeline's own code. The agents cannot edit any of it, so a
+# failure here means a human broke something.
+
+on:
+  push:
+    branches: [main]
+    paths: ['agents/**', 'scripts/**', 'config/**', '.github/workflows/**']
+  pull_request:
+    paths: ['agents/**', 'scripts/**', 'config/**', '.github/workflows/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Self test
+        run: node scripts/selftest.mjs
+
+      - name: config/agents.json is valid JSON
+        run: node -e "JSON.parse(require('fs').readFileSync('config/agents.json','utf8')); console.log('ok')"
+
+      - name: Every prompt is present
+        run: |
+          for f in agents/prompts/po.md agents/prompts/dev.md agents/prompts/qc.md; do
+            test -s "$f" || { echo "missing or empty: $f"; exit 1; }
+          done
+          echo ok

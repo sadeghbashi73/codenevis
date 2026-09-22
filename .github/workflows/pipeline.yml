@@ -1,0 +1,90 @@
+name: Agent pipeline
+
+# The whole loop in one job: PO plans, developer implements, QC reviews and
+# merges, repeat. Kept in a single job on purpose — GITHUB_TOKEN cannot trigger
+# another workflow run, so chaining workflows would require a personal access
+# token just to keep the pipeline moving.
+
+on:
+  issues:
+    types: [labeled]
+  workflow_dispatch:
+    inputs:
+      brief_issue:
+        description: 'Issue number holding the project brief (leave empty to just continue the backlog)'
+        required: false
+        type: string
+      max_tasks:
+        description: 'How many tasks to attempt in this run'
+        required: false
+        default: '5'
+        type: string
+      skip_po:
+        description: 'Skip planning and go straight to the existing backlog'
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: codenevis-pipeline
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  run:
+    # Label-triggered runs only fire for the PO label; dispatch always runs.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.label.name == 'agent:po'
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Show the agent configuration
+        run: node agents/doctor.mjs
+        env:
+          PO_API_KEY: ${{ secrets.PO_API_KEY }}
+          DEV_API_KEY: ${{ secrets.DEV_API_KEY }}
+          QC_API_KEY: ${{ secrets.QC_API_KEY }}
+          CODENEVIS_API_KEY: ${{ secrets.CODENEVIS_API_KEY }}
+
+      - name: Run the pipeline
+        run: node agents/pipeline.mjs
+        env:
+          # One secret per agent, so each role can use its own key, its own
+          # provider, and its own rate limit.
+          PO_API_KEY: ${{ secrets.PO_API_KEY }}
+          DEV_API_KEY: ${{ secrets.DEV_API_KEY }}
+          QC_API_KEY: ${{ secrets.QC_API_KEY }}
+          CODENEVIS_API_KEY: ${{ secrets.CODENEVIS_API_KEY }}
+
+          # Optional per-agent overrides, set as repository *variables*.
+          PO_MODEL: ${{ vars.PO_MODEL }}
+          DEV_MODEL: ${{ vars.DEV_MODEL }}
+          QC_MODEL: ${{ vars.QC_MODEL }}
+          PO_PROVIDER: ${{ vars.PO_PROVIDER }}
+          DEV_PROVIDER: ${{ vars.DEV_PROVIDER }}
+          QC_PROVIDER: ${{ vars.QC_PROVIDER }}
+          PO_BASE_URL: ${{ vars.PO_BASE_URL }}
+          DEV_BASE_URL: ${{ vars.DEV_BASE_URL }}
+          QC_BASE_URL: ${{ vars.QC_BASE_URL }}
+
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_PAT: ${{ secrets.GH_PAT }}
+
+          BRIEF_ISSUE: ${{ github.event.inputs.brief_issue || github.event.issue.number }}
+          MAX_TASKS: ${{ github.event.inputs.max_tasks || '5' }}
+          SKIP_PO: ${{ github.event.inputs.skip_po || 'false' }}

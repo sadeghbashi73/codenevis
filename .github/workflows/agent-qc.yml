@@ -1,0 +1,53 @@
+name: QC agent
+
+# Review one pull request on its own. Also runs automatically when a PR is
+# labelled `agent:qc`, so you can hand a human-written PR to the reviewer.
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'Pull request number to review'
+        required: true
+        type: string
+  pull_request_target:
+    types: [labeled]
+
+concurrency:
+  group: codenevis-qc-${{ github.event.inputs.pr_number || github.event.pull_request.number }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  review:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.label.name == 'agent:qc'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # Review the PR head, not the merge commit.
+          ref: refs/pull/${{ github.event.inputs.pr_number || github.event.pull_request.number }}/head
+          token: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - run: node agents/qc.mjs
+        env:
+          QC_API_KEY: ${{ secrets.QC_API_KEY }}
+          CODENEVIS_API_KEY: ${{ secrets.CODENEVIS_API_KEY }}
+          QC_MODEL: ${{ vars.QC_MODEL }}
+          QC_PROVIDER: ${{ vars.QC_PROVIDER }}
+          QC_BASE_URL: ${{ vars.QC_BASE_URL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_PAT: ${{ secrets.GH_PAT }}
+          PR_NUMBER: ${{ github.event.inputs.pr_number || github.event.pull_request.number }}
